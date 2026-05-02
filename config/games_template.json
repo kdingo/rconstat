@@ -1,0 +1,56 @@
+{
+  "games": [
+    {
+      "name": "Example Source Server",
+      "host": "127.0.0.1",
+      "port": 27015,
+      "password": "replace-me",
+      "processNamePattern": "^srcds$",
+      "displayOrder": 1,
+      "timeoutSeconds": 5,
+      "commands": {
+        "up": {
+          "command": "status",
+          "regex": "hostname",
+          "group": 0
+        },
+        "playerCount": {
+          "command": "status",
+          "regex": "players\\s*:\\s*(\\d+)",
+          "group": 1
+        },
+        "version": {
+          "command": "version",
+          "regex": "([0-9][0-9A-Za-z\\._-]*)",
+          "group": 1
+        }
+      }
+    },
+    {
+      "name": "Example Java Server",
+      "host": "127.0.0.1",
+      "port": 25575,
+      "password": "replace-me-too",
+      "processNamePattern": "^java$",
+      "displayOrder": 2,
+      "timeoutSeconds": 5,
+      "commands": {
+        "up": {
+          "command": "list",
+          "regex": "players\\s+online",
+          "group": 0
+        },
+        "playerCount": {
+          "command": "list",
+          "regex": "There\\s+are\\s+(\\d+)\\s+of\\s+\\d+\\s+players\\s+online",
+          "group": 1
+        },
+        "version": {
+          "command": "version",
+          "regex": "version\\s+([0-9A-Za-z\\._-]+)",
+          "group": 1
+        }
+      }
+    }
+  ]
+}

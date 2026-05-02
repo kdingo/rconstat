@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Game Server Status</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; background: #111; color: #eee; }
+    h1 { margin-bottom: 0.2rem; }
+    .timestamp { color: #bbb; margin-bottom: 1rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #333; padding: 0.55rem; text-align: left; vertical-align: top; }
+    th { background: #1d1d1d; }
+    tr:nth-child(even) { background: #161616; }
+    .badge { padding: 0.15rem 0.45rem; border-radius: 0.35rem; font-weight: 700; display: inline-block; }
+    .up { background: #1c7f37; color: #fff; }
+    .down { background: #9c2f2f; color: #fff; }
+  </style>
+</head>
+<body>
+  <h1>Game Server Status</h1>
+  <div class="timestamp">Generated: 2026-05-02 19:10:11 UTC</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Game</th>
+        <th>Server</th>
+        <th>Players</th>
+        <th>Version</th>
+        <th>PID</th>
+        <th>Process</th>
+        <th>CPU (%)</th>
+        <th>Memory (MB)</th>
+        <th>Process Status</th>
+        <th>Error Hint</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+  <td>Example Source Server</td>
+  <td><span class="badge down">DOWN</span></td>
+  <td>0</td>
+  <td>Unknown</td>
+  <td>N/A</td>
+  <td>N/A</td>
+  <td>N/A</td>
+  <td>N/A</td>
+  <td>Not Running</td>
+  <td>up command failed: Failed to start rcon binary &#39;rcon&#39;: Exception calling &quot;Start&quot; with &quot;0&quot; argument(s): &quot;An error occurred trying to start process &#39;rcon&#39; with working directory &#39;/home/dingo/Repos/rconstat&#39;. No such file or directory&quot; | playerCount command failed: Failed to start rcon binary &#39;rcon&#39;: Exception calling &quot;Start&quot; with &quot;0&quot; argument(s): &quot;An error occurred trying to start process &#39;rcon&#39; with working directory &#39;/home/dingo/Repos/rconstat&#39;. No such file or directory&quot; | version command failed: Failed to start rcon binary &#39;rcon&#39;: Exception calling &quot;Start&quot; with &quot;0&quot; argument(s): &quot;An error occurred trying to start process &#39;rcon&#39; with working directory &#39;/home/dingo/Repos/rconstat&#39;. No such file or directory&quot;</td>
+</tr>
+<tr>
+  <td>Example Java Server</td>
+  <td><span class="badge down">DOWN</span></td>
+  <td>0</td>
+  <td>Unknown</td>
+  <td>N/A</td>
+  <td>N/A</td>
+  <td>N/A</td>
+  <td>N/A</td>
+  <td>Not Running</td>
+  <td>up command failed: Failed to start rcon binary &#39;rcon&#39;: Exception calling &quot;Start&quot; with &quot;0&quot; argument(s): &quot;An error occurred trying to start process &#39;rcon&#39; with working directory &#39;/home/dingo/Repos/rconstat&#39;. No such file or directory&quot; | playerCount command failed: Failed to start rcon binary &#39;rcon&#39;: Exception calling &quot;Start&quot; with &quot;0&quot; argument(s): &quot;An error occurred trying to start process &#39;rcon&#39; with working directory &#39;/home/dingo/Repos/rconstat&#39;. No such file or directory&quot; | version command failed: Failed to start rcon binary &#39;rcon&#39;: Exception calling &quot;Start&quot; with &quot;0&quot; argument(s): &quot;An error occurred trying to start process &#39;rcon&#39; with working directory &#39;/home/dingo/Repos/rconstat&#39;. No such file or directory&quot;</td>
+</tr>
+    </tbody>
+  </table>
+</body>
+</html>
