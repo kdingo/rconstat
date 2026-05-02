@@ -8,7 +8,7 @@ Static game server status page generator using PowerShell + RCON CLI.
 
 Each game row includes:
 
-- server up/down
+- server up/down (from `processNamePattern`, not RCON)
 - logged-in player count
 - server version
 - process id(s)
@@ -33,7 +33,7 @@ Edit `config/games.json` and add as many games as needed:
 - `processNamePattern`: regex used against process name
 - `displayOrder`: lower numbers render first
 - `timeoutSeconds`: optional per-game command timeout
-- `commands.up`, `commands.playerCount`, `commands.version`:
+- `commands.playerCount`, `commands.version` (up/down follows `processNamePattern` match, not RCON):
   - `command`: RCON command string
   - `regex`: parser pattern for command output
   - `group`: capture group index to extract

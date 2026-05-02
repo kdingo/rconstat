@@ -1,3 +1,6 @@
+#!/usr/bin/pwsh
+# uses rcon from https://github.com/gorcon/rcon-cli
+#
 param(
     [string]$ConfigPath = "config/games.json",
     [string]$OutputPath = "public/index.html",
@@ -6,6 +9,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+$unixtime = [Math]::Round((Get-Date).ToUniversalTime().Subtract((Get-Date "1970-01-01")).TotalSeconds) * 1000
+
 
 function Escape-Html {
     param([AllowNull()][string]$Text)
@@ -104,7 +109,7 @@ function Get-ProcessSnapshot {
     )
 
     $all = Get-Process -ErrorAction SilentlyContinue
-    $matching = $all | Where-Object { $_.ProcessName -match $ProcessNamePattern }
+    $matching = $all | Where-Object { $_.CommandLine -match $ProcessNamePattern }
     if (-not $matching) {
         return [pscustomobject]@{
             Found         = $false
@@ -167,17 +172,15 @@ function Get-GameStatus {
     $processInfo = Get-ProcessSnapshot -ProcessNamePattern $Game.processNamePattern
     $errors = [System.Collections.Generic.List[string]]::new()
 
-    $upResult = $null
     $playerCountResult = $null
     $versionResult = $null
 
     $commands = @{
-        up = $Game.commands.up
         playerCount = $Game.commands.playerCount
         version = $Game.commands.version
     }
 
-    foreach ($key in @("up", "playerCount", "version")) {
+    foreach ($key in @("playerCount", "version")) {
         $cmdSpec = $commands[$key]
         if ($null -eq $cmdSpec -or [string]::IsNullOrWhiteSpace($cmdSpec.command)) {
             $errors.Add("Missing '$key' command config")
@@ -196,19 +199,12 @@ function Get-GameStatus {
         }
         $parsed = Parse-CommandResult -Output $invocation.Output -Regex $cmdSpec.regex -Group $group
         switch ($key) {
-            "up" { $upResult = $parsed }
             "playerCount" { $playerCountResult = $parsed }
             "version" { $versionResult = $parsed }
         }
     }
 
-    $isUp = "DOWN"
-    if (-not [string]::IsNullOrWhiteSpace($upResult)) {
-        $isUp = "UP"
-    }
-    elseif ($errors.Count -eq 0) {
-        $isUp = "UP"
-    }
+    $isUp = if ($processInfo.Found) { "UP" } else { "DOWN" }
 
     if ([string]::IsNullOrWhiteSpace($playerCountResult)) {
         $playerCountResult = "0"
@@ -275,6 +271,46 @@ function ConvertTo-StatusPageHtml {
     .up { background: #1c7f37; color: #fff; }
     .down { background: #9c2f2f; color: #fff; }
   </style>
+<script>
+    function timeAgo(timestamp) {
+        const currentTimestamp = Date.now();
+        const timeDifference = currentTimestamp - timestamp;
+        // Define time intervals in milliseconds
+        const minute = 60 * 1000;
+        const hour = 60 * minute;
+        const day = 24 * hour;
+        const week = 7 * day;
+        const month = 30 * day;
+        const year = 365 * day;
+      
+        if (timeDifference < minute) {
+          const seconds = Math.floor(timeDifference / 1000);
+          return `${seconds} second${seconds === 1 ? '' : 's'} ago`;
+        } else if (timeDifference < hour) {
+          const minutes = Math.floor(timeDifference / minute);
+          return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+        } else if (timeDifference < day) {
+          const hours = Math.floor(timeDifference / hour);
+          return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+        } else if (timeDifference < week) {
+          const days = Math.floor(timeDifference / day);
+          return `${days} day${days === 1 ? '' : 's'} ago`;
+        } else if (timeDifference < month) {
+          const weeks = Math.floor(timeDifference / week);
+          return `${weeks} week${weeks === 1 ? '' : 's'} ago`;
+        } else if (timeDifference < year) {
+          const months = Math.floor(timeDifference / month);
+          return `${months} month${months === 1 ? '' : 's'} ago`;
+        } else {
+          const years = Math.floor(timeDifference / year);
+          return `${years} year${years === 1 ? '' : 's'} ago`;
+        }
+    }
+    function updateDisplay(timestamp) {
+        const timeAgoDisplay = document.getElementById('timeAgoDisplay');
+        timeAgoDisplay.textContent = timeAgo(timestamp);
+    }
+    </script>
 </head>
 <body>
   <h1>Game Server Status</h1>
@@ -298,6 +334,17 @@ function ConvertTo-StatusPageHtml {
       $($rowHtml -join [Environment]::NewLine)
     </tbody>
   </table>
+<script>
+        const timestamp = $unixtime;
+
+        // Initial display
+        updateDisplay(timestamp);
+
+        // Update the display every second
+        setInterval(function() {
+          updateDisplay(timestamp);
+        }, 1000);
+    </script>
 </body>
 </html>
 "@

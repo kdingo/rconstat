@@ -9,11 +9,6 @@
       "displayOrder": 1,
       "timeoutSeconds": 5,
       "commands": {
-        "up": {
-          "command": "status",
-          "regex": "hostname",
-          "group": 0
-        },
         "playerCount": {
           "command": "status",
           "regex": "players\\s*:\\s*(\\d+)",
@@ -35,11 +30,6 @@
       "displayOrder": 2,
       "timeoutSeconds": 5,
       "commands": {
-        "up": {
-          "command": "list",
-          "regex": "players\\s+online",
-          "group": 0
-        },
         "playerCount": {
           "command": "list",
           "regex": "There\\s+are\\s+(\\d+)\\s+of\\s+\\d+\\s+players\\s+online",
