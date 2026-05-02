@@ -32,7 +32,7 @@ function Invoke-RconCommand {
 
     $psi = [System.Diagnostics.ProcessStartInfo]::new()
     $psi.FileName = $Binary
-    $psi.Arguments = "-H $ServerHost -P $Port -p `"$Password`" `"$Command`""
+    $psi.Arguments = "-a $($ServerHost):$($Port) -p `"$Password`" `"$Command`""
     $psi.RedirectStandardOutput = $true
     $psi.RedirectStandardError = $true
     $psi.UseShellExecute = $false
