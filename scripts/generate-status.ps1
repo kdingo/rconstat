@@ -103,6 +103,14 @@ function Parse-CommandResult {
     return $match.Groups[$Group].Value
 }
 
+function Format-Uptime {
+    param(
+        [Parameter(Mandatory = $true)][timespan]$Elapsed
+    )
+
+    return "{0}d {1:D2}h {2:D2}m {3:D2}s" -f $Elapsed.Days, $Elapsed.Hours, $Elapsed.Minutes, $Elapsed.Seconds
+}
+
 function Get-ProcessSnapshot {
     param(
         [Parameter(Mandatory = $true)][string]$ProcessNamePattern
@@ -117,6 +125,7 @@ function Get-ProcessSnapshot {
             ProcessNames  = "N/A"
             CpuPercent    = "N/A"
             MemoryMb      = "N/A"
+            Uptime        = "N/A"
             ErrorMessage  = ""
         }
     }
@@ -129,6 +138,8 @@ function Get-ProcessSnapshot {
     $TotalSec = (New-TimeSpan -Start $matching.StartTime).TotalSeconds
     $Usage = ($matching.CPU / ([Environment]::ProcessorCount * $TotalSec)) * 100
     $cpuPercent = [Math]::Round($Usage, 1)
+    $oldestStartTime = ($matching.StartTime | Sort-Object | Select-Object -First 1)
+    $uptime = Format-Uptime -Elapsed (New-TimeSpan -Start $oldestStartTime -End (Get-Date))
 
     return [pscustomobject]@{
         Found         = $true
@@ -136,6 +147,7 @@ function Get-ProcessSnapshot {
         ProcessNames  = ($nameList -join ", ")
         CpuPercent    = $cpuPercent
         MemoryMb      = $memoryMb.ToString()
+        Uptime        = $uptime
         ErrorMessage  = ""
     }
 }
@@ -204,6 +216,7 @@ function Get-GameStatus {
         ProcessNames  = $processInfo.ProcessNames
         CpuPercent    = $processInfo.CpuPercent
         MemoryMb      = $processInfo.MemoryMb
+        Uptime        = $processInfo.Uptime
         ErrorHint     = if ($errors.Count -gt 0) { ($errors -join " | ") } else { "" }
         DisplayOrder  = if ($Game.displayOrder -ne $null) { [int]$Game.displayOrder } else { 9999 }
     }
@@ -227,6 +240,7 @@ function ConvertTo-StatusPageHtml {
   <td>$(Escape-Html $row.ProcessNames)</td>
   <td>$(Escape-Html $row.CpuPercent)</td>
   <td>$(Escape-Html $row.MemoryMb)</td>
+  <td>$(Escape-Html $row.Uptime)</td>
   <td>$(Escape-Html $row.ErrorHint)</td>
 </tr>
 "@
@@ -306,6 +320,7 @@ function ConvertTo-StatusPageHtml {
         <th>Process</th>
         <th>CPU (%)</th>
         <th>Memory (MB)</th>
+        <th>Uptime</th>
         <th>Error Hint</th>
       </tr>
     </thead>
@@ -352,6 +367,7 @@ $rows = foreach ($game in $config.games) {
             ProcessNames  = "N/A"
             CpuPercent    = "N/A"
             MemoryMb      = "N/A"
+            Uptime        = "N/A"
             ErrorHint     = $_.Exception.Message
             DisplayOrder  = if ($game.displayOrder -ne $null) { [int]$game.displayOrder } else { 9999 }
         }
