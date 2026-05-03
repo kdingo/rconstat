@@ -127,25 +127,9 @@ function Get-ProcessSnapshot {
     $memoryBytes = ($matching | Measure-Object -Property WorkingSet64 -Sum).Sum
     $memoryMb = [math]::Round(($memoryBytes / 1MB), 2)
 
-    $cpuPercent = "N/A"
-    try {
-        $cpuValues = @()
-        foreach ($pid in $pidList) {
-            $raw = & ps -p $pid -o %cpu= 2>$null
-            if (-not [string]::IsNullOrWhiteSpace($raw)) {
-                $parsed = 0.0
-                if ([double]::TryParse($raw.Trim(), [ref]$parsed)) {
-                    $cpuValues += $parsed
-                }
-            }
-        }
-        if ($cpuValues.Count -gt 0) {
-            $cpuPercent = [math]::Round((($cpuValues | Measure-Object -Sum).Sum), 2).ToString()
-        }
-    }
-    catch {
-        $cpuPercent = "N/A"
-    }
+    $TotalSec = (New-TimeSpan -Start $matching.StartTime).TotalSeconds
+    $Usage = ($matching.CPU / ([Environment]::ProcessorCount * $TotalSec)) * 100
+    $cpuPercent = [Math]::Round($Usage, 1)
 
     return [pscustomobject]@{
         Found         = $true
