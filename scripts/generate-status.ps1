@@ -228,8 +228,19 @@ function ConvertTo-StatusPageHtml {
     )
 
     $nowUtc = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss 'UTC'")
+    $showErrorHintColumn = ($Rows | Where-Object { -not [string]::IsNullOrWhiteSpace($_.ErrorHint) } | Measure-Object).Count -gt 0
     $rowHtml = foreach ($row in ($Rows | Sort-Object -Property DisplayOrder, Name)) {
         $statusClass = if ($row.UpStatus -eq "UP") { "up" } else { "down" }
+        $errorHintCell = ""
+        if (-not [string]::IsNullOrWhiteSpace($row.ErrorHint)) {
+            $errorId = "error-" + ([Guid]::NewGuid().ToString("N"))
+            $encodedError = Escape-Html $row.ErrorHint
+            $errorHintCell = "<button type=`"button`" class=`"error-icon`" onclick=`"toggleErrorHint('$errorId')`" aria-label=`"Show error hint`">!</button><div id=`"$errorId`" class=`"error-message`" style=`"display:none;`">$encodedError</div>"
+        }
+        $errorHintColumnHtml = ""
+        if ($showErrorHintColumn) {
+            $errorHintColumnHtml = "  <td>$errorHintCell</td>"
+        }
         @"
 <tr>
   <td>$(Escape-Html $row.Name)</td>
@@ -241,9 +252,13 @@ function ConvertTo-StatusPageHtml {
   <td>$(Escape-Html $row.CpuPercent)</td>
   <td>$(Escape-Html $row.MemoryMb)</td>
   <td>$(Escape-Html $row.Uptime)</td>
-  <td>$(Escape-Html $row.ErrorHint)</td>
+$errorHintColumnHtml
 </tr>
 "@
+    }
+    $errorHintHeaderHtml = ""
+    if ($showErrorHintColumn) {
+        $errorHintHeaderHtml = "        <th>Error Hint</th>"
     }
 
     return @"
@@ -264,6 +279,25 @@ function ConvertTo-StatusPageHtml {
     .badge { padding: 0.15rem 0.45rem; border-radius: 0.35rem; font-weight: 700; display: inline-block; }
     .up { background: #1c7f37; color: #fff; }
     .down { background: #9c2f2f; color: #fff; }
+    .error-icon {
+      width: 1.4rem;
+      height: 1.4rem;
+      border: none;
+      border-radius: 50%;
+      background: #d97706;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+    }
+    .error-icon:hover { background: #f59e0b; }
+    .error-message {
+      margin-top: 0.35rem;
+      color: #ffd2d2;
+      white-space: normal;
+      word-break: break-word;
+    }
   </style>
 <script>
     function timeAgo(timestamp) {
@@ -304,6 +338,13 @@ function ConvertTo-StatusPageHtml {
         const timeAgoDisplay = document.getElementById('timeAgoDisplay');
         timeAgoDisplay.textContent = timeAgo(timestamp);
     }
+    function toggleErrorHint(elementId) {
+        const errorMessage = document.getElementById(elementId);
+        if (!errorMessage) {
+            return;
+        }
+        errorMessage.style.display = errorMessage.style.display === "none" ? "block" : "none";
+    }
     </script>
 </head>
 <body>
@@ -321,7 +362,7 @@ function ConvertTo-StatusPageHtml {
         <th>CPU (%)</th>
         <th>Memory (MB)</th>
         <th>Uptime</th>
-        <th>Error Hint</th>
+$errorHintHeaderHtml
       </tr>
     </thead>
     <tbody>
