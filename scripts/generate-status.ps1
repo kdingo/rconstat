@@ -3,14 +3,14 @@
 #
 param(
     [string]$ConfigPath = "config/games.json",
-    [string]$OutputPath = "public/index.html",
+    [string]$OutputPath = "~/www/index.html",
     [string]$RconBinary = "rcon"
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $unixtime = [Math]::Round((Get-Date).ToUniversalTime().Subtract((Get-Date "1970-01-01")).TotalSeconds) * 1000
-
+$ConfigPath = "$PSScriptRoot/../$ConfigPath"
 
 function Escape-Html {
     param([AllowNull()][string]$Text)
@@ -265,6 +265,7 @@ $errorHintColumnHtml
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta http-equiv="refresh" content="60">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Game Server Status</title>
@@ -509,30 +510,30 @@ $errorHintColumnHtml
         const week = 7 * day;
         const month = 30 * day;
         const year = 365 * day;
-      
-        if (timeDifference < minute) {
+
+       if (timeDifference < minute) {
           const seconds = Math.floor(timeDifference / 1000);
-          return `${seconds} second${seconds === 1 ? '' : 's'} ago`;
+          return ```${seconds} second`${seconds === 1 ? '' : 's'} ago``;
         } else if (timeDifference < hour) {
           const minutes = Math.floor(timeDifference / minute);
-          return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+          return ```${minutes} minute`${minutes === 1 ? '' : 's'} ago``;
         } else if (timeDifference < day) {
           const hours = Math.floor(timeDifference / hour);
-          return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+          return ```${hours} hour`${hours === 1 ? '' : 's'} ago``;
         } else if (timeDifference < week) {
           const days = Math.floor(timeDifference / day);
-          return `${days} day${days === 1 ? '' : 's'} ago`;
+          return ```${days} day`${days === 1 ? '' : 's'} ago``;
         } else if (timeDifference < month) {
           const weeks = Math.floor(timeDifference / week);
-          return `${weeks} week${weeks === 1 ? '' : 's'} ago`;
+          return ```${weeks} week`${weeks === 1 ? '' : 's'} ago``;
         } else if (timeDifference < year) {
           const months = Math.floor(timeDifference / month);
-          return `${months} month${months === 1 ? '' : 's'} ago`;
+          return ```${months} month`${months === 1 ? '' : 's'} ago``;
         } else {
           const years = Math.floor(timeDifference / year);
-          return `${years} year${years === 1 ? '' : 's'} ago`;
+          return ```${years} year`${years === 1 ? '' : 's'} ago``;
         }
-    }
+   }
     function updateDisplay(timestamp) {
         const timeAgoDisplay = document.getElementById('timeAgoDisplay');
         timeAgoDisplay.textContent = timeAgo(timestamp);
@@ -552,7 +553,7 @@ $errorHintColumnHtml
       <header class="status-header">
         <div>
           <h1>Game Server Status</h1>
-          <div class="timestamp">Last refresh: <span id="timeAgoDisplay">just now</span></div>
+          <div class="timestamp">Last updated: <span id="timeAgoDisplay"></span></div>
         </div>
         <div class="timestamp timestamp-utc">Generated: $nowUtc</div>
       </header>
