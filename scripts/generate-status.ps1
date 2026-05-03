@@ -117,7 +117,6 @@ function Get-ProcessSnapshot {
             ProcessNames  = "N/A"
             CpuPercent    = "N/A"
             MemoryMb      = "N/A"
-            ProcessStatus = "Not Running"
             ErrorMessage  = ""
         }
     }
@@ -137,7 +136,6 @@ function Get-ProcessSnapshot {
         ProcessNames  = ($nameList -join ", ")
         CpuPercent    = $cpuPercent
         MemoryMb      = $memoryMb.ToString()
-        ProcessStatus = "Running"
         ErrorMessage  = ""
     }
 }
@@ -206,7 +204,6 @@ function Get-GameStatus {
         ProcessNames  = $processInfo.ProcessNames
         CpuPercent    = $processInfo.CpuPercent
         MemoryMb      = $processInfo.MemoryMb
-        ProcessStatus = $processInfo.ProcessStatus
         ErrorHint     = if ($errors.Count -gt 0) { ($errors -join " | ") } else { "" }
         DisplayOrder  = if ($Game.displayOrder -ne $null) { [int]$Game.displayOrder } else { 9999 }
     }
@@ -230,7 +227,6 @@ function ConvertTo-StatusPageHtml {
   <td>$(Escape-Html $row.ProcessNames)</td>
   <td>$(Escape-Html $row.CpuPercent)</td>
   <td>$(Escape-Html $row.MemoryMb)</td>
-  <td>$(Escape-Html $row.ProcessStatus)</td>
   <td>$(Escape-Html $row.ErrorHint)</td>
 </tr>
 "@
@@ -310,7 +306,6 @@ function ConvertTo-StatusPageHtml {
         <th>Process</th>
         <th>CPU (%)</th>
         <th>Memory (MB)</th>
-        <th>Process Status</th>
         <th>Error Hint</th>
       </tr>
     </thead>
@@ -357,7 +352,6 @@ $rows = foreach ($game in $config.games) {
             ProcessNames  = "N/A"
             CpuPercent    = "N/A"
             MemoryMb      = "N/A"
-            ProcessStatus = "Unknown"
             ErrorHint     = $_.Exception.Message
             DisplayOrder  = if ($game.displayOrder -ne $null) { [int]$game.displayOrder } else { 9999 }
         }
