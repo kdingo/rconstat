@@ -239,19 +239,19 @@ function ConvertTo-StatusPageHtml {
         }
         $errorHintColumnHtml = ""
         if ($showErrorHintColumn) {
-            $errorHintColumnHtml = "  <td>$errorHintCell</td>"
+            $errorHintColumnHtml = "  <td data-label=`"Error Hint`">$errorHintCell</td>"
         }
         @"
 <tr>
-  <td>$(Escape-Html $row.Name)</td>
-  <td><span class="badge $statusClass">$(Escape-Html $row.UpStatus)</span></td>
-  <td>$(Escape-Html $row.PlayerCount)</td>
-  <td>$(Escape-Html $row.Version)</td>
-  <td>$(Escape-Html $row.ProcessIds)</td>
-  <td>$(Escape-Html $row.ProcessNames)</td>
-  <td>$(Escape-Html $row.CpuPercent)</td>
-  <td>$(Escape-Html $row.MemoryMb)</td>
-  <td>$(Escape-Html $row.Uptime)</td>
+  <td data-label="Game">$(Escape-Html $row.Name)</td>
+  <td data-label="Server"><span class="badge $statusClass">$(Escape-Html $row.UpStatus)</span></td>
+  <td data-label="Players">$(Escape-Html $row.PlayerCount)</td>
+  <td data-label="Version">$(Escape-Html $row.Version)</td>
+  <td data-label="PID">$(Escape-Html $row.ProcessIds)</td>
+  <td data-label="Process">$(Escape-Html $row.ProcessNames)</td>
+  <td data-label="CPU (%)">$(Escape-Html $row.CpuPercent)</td>
+  <td data-label="Memory (MB)">$(Escape-Html $row.MemoryMb)</td>
+  <td data-label="Uptime">$(Escape-Html $row.Uptime)</td>
 $errorHintColumnHtml
 </tr>
 "@
@@ -269,34 +269,233 @@ $errorHintColumnHtml
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Game Server Status</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; background: #111; color: #eee; }
-    h1 { margin-bottom: 0.2rem; }
-    .timestamp { color: #bbb; margin-bottom: 1rem; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { border: 1px solid #333; padding: 0.55rem; text-align: left; vertical-align: top; }
-    th { background: #1d1d1d; }
-    tr:nth-child(even) { background: #161616; }
-    .badge { padding: 0.15rem 0.45rem; border-radius: 0.35rem; font-weight: 700; display: inline-block; }
-    .up { background: #1c7f37; color: #fff; }
-    .down { background: #9c2f2f; color: #fff; }
+    :root {
+      color-scheme: dark;
+      --bg: #05070f;
+      --panel: rgba(17, 24, 39, 0.8);
+      --panel-border: #2b3142;
+      --text-primary: #e6edf7;
+      --text-muted: #9fb0cc;
+      --header-bg: #0f1626;
+      --row-alt: rgba(148, 163, 184, 0.06);
+      --badge-up: #14532d;
+      --badge-up-text: #bbf7d0;
+      --badge-down: #7f1d1d;
+      --badge-down-text: #fecaca;
+      --focus: #60a5fa;
+      --error: #f59e0b;
+      --error-hover: #fbbf24;
+      --error-text: #fed7aa;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(circle at top, #131d35 0%, var(--bg) 55%);
+      color: var(--text-primary);
+    }
+
+    .page-shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 2.5rem;
+    }
+
+    .status-card {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(8px);
+    }
+
+    .status-header {
+      padding: 1.25rem 1.4rem;
+      display: flex;
+      gap: 1rem;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid var(--panel-border);
+      background: rgba(15, 22, 38, 0.75);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      letter-spacing: 0.01em;
+    }
+
+    .timestamp {
+      margin-top: 0.35rem;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
+
+    .timestamp-utc {
+      margin-top: 0;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    th,
+    td {
+      padding: 0.72rem 0.82rem;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--panel-border);
+      font-size: 0.94rem;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--header-bg);
+      color: #c2d3f0;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 0.75rem;
+    }
+
+    tbody tr:nth-child(even) td {
+      background: var(--row-alt);
+    }
+
+    tbody tr:hover td {
+      background: rgba(96, 165, 250, 0.08);
+    }
+
+    .badge {
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+      font-weight: 700;
+      display: inline-block;
+      font-size: 0.76rem;
+      letter-spacing: 0.04em;
+    }
+
+    .up {
+      background: var(--badge-up);
+      color: var(--badge-up-text);
+    }
+
+    .down {
+      background: var(--badge-down);
+      color: var(--badge-down-text);
+    }
+
     .error-icon {
-      width: 1.4rem;
-      height: 1.4rem;
+      width: 1.5rem;
+      height: 1.5rem;
       border: none;
       border-radius: 50%;
-      background: #d97706;
-      color: #fff;
-      font-weight: 700;
+      background: var(--error);
+      color: #111827;
+      font-weight: 800;
       cursor: pointer;
       line-height: 1;
       padding: 0;
     }
-    .error-icon:hover { background: #f59e0b; }
+
+    .error-icon:hover {
+      background: var(--error-hover);
+    }
+
+    .error-icon:focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+
     .error-message {
-      margin-top: 0.35rem;
-      color: #ffd2d2;
+      margin-top: 0.42rem;
+      color: var(--error-text);
       white-space: normal;
       word-break: break-word;
+      max-width: 32rem;
+      line-height: 1.35;
+    }
+
+    @media (max-width: 860px) {
+      .page-shell {
+        padding: 1rem 0.7rem 1.4rem;
+      }
+
+      .status-header {
+        flex-direction: column;
+      }
+
+      .timestamp-utc {
+        text-align: left;
+      }
+
+      .table-wrap {
+        overflow-x: visible;
+      }
+
+      table,
+      tbody,
+      tr,
+      td {
+        display: block;
+        width: 100%;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tbody {
+        padding: 0.35rem;
+      }
+
+      tbody tr {
+        margin: 0.6rem 0;
+        border: 1px solid var(--panel-border);
+        border-radius: 0.75rem;
+        overflow: hidden;
+        background: rgba(15, 22, 38, 0.75);
+      }
+
+      tbody tr:nth-child(even) td,
+      tbody tr:hover td {
+        background: transparent;
+      }
+
+      tbody td {
+        border-bottom: 1px solid var(--panel-border);
+        padding: 0.6rem 0.72rem 0.65rem;
+      }
+
+      tbody td:last-child {
+        border-bottom: none;
+      }
+
+      tbody td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 0.2rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-size: 0.7rem;
+        font-weight: 600;
+      }
     }
   </style>
 <script>
@@ -348,27 +547,38 @@ $errorHintColumnHtml
     </script>
 </head>
 <body>
-  <h1>Game Server Status</h1>
-  <div class="timestamp">Generated: $nowUtc</div>
-  <table>
-    <thead>
-      <tr>
-        <th>Game</th>
-        <th>Server</th>
-        <th>Players</th>
-        <th>Version</th>
-        <th>PID</th>
-        <th>Process</th>
-        <th>CPU (%)</th>
-        <th>Memory (MB)</th>
-        <th>Uptime</th>
+  <main class="page-shell">
+    <section class="status-card">
+      <header class="status-header">
+        <div>
+          <h1>Game Server Status</h1>
+          <div class="timestamp">Last refresh: <span id="timeAgoDisplay">just now</span></div>
+        </div>
+        <div class="timestamp timestamp-utc">Generated: $nowUtc</div>
+      </header>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Game</th>
+              <th>Server</th>
+              <th>Players</th>
+              <th>Version</th>
+              <th>PID</th>
+              <th>Process</th>
+              <th>CPU (%)</th>
+              <th>Memory (MB)</th>
+              <th>Uptime</th>
 $errorHintHeaderHtml
-      </tr>
-    </thead>
-    <tbody>
-      $($rowHtml -join [Environment]::NewLine)
-    </tbody>
-  </table>
+            </tr>
+          </thead>
+          <tbody>
+            $($rowHtml -join [Environment]::NewLine)
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
 <script>
         const timestamp = $unixtime;
 
