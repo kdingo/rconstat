@@ -3,14 +3,13 @@
 #
 param(
     [string]$ConfigPath = "config/games.json",
-    [string]$OutputPath = "~/www/index.html",
+    [string]$OutputPath = "public/index.html",
     [string]$RconBinary = "rcon"
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $unixtime = [Math]::Round((Get-Date).ToUniversalTime().Subtract((Get-Date "1970-01-01")).TotalSeconds) * 1000
-$ConfigPath = "$PSScriptRoot/../$ConfigPath"
 
 function Escape-Html {
     param([AllowNull()][string]$Text)
@@ -224,7 +223,8 @@ function Get-GameStatus {
 
 function ConvertTo-StatusPageHtml {
     param(
-        [Parameter(Mandatory = $true)]$Rows
+        [Parameter(Mandatory = $true)]$Rows,
+        [string]$PageTitle = "Game Server Status"
     )
 
     $nowUtc = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss 'UTC'")
@@ -268,7 +268,7 @@ $errorHintColumnHtml
   <meta http-equiv="refresh" content="60">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Game Server Status</title>
+  <title>$(Escape-Html $PageTitle)</title>
   <style>
     :root {
       color-scheme: dark;
@@ -552,7 +552,7 @@ $errorHintColumnHtml
     <section class="status-card">
       <header class="status-header">
         <div>
-          <h1>Game Server Status</h1>
+          <h1>$(Escape-Html $PageTitle)</h1>
           <div class="timestamp">Last updated: <span id="timeAgoDisplay"></span></div>
         </div>
         <div class="timestamp timestamp-utc">Generated: $nowUtc</div>
@@ -605,6 +605,11 @@ if ($null -eq $config.games -or $config.games.Count -eq 0) {
     throw "No games are configured in '$ConfigPath'."
 }
 
+$pageTitle = "Game Server Status"
+if (-not [string]::IsNullOrWhiteSpace($config.pageTitle)) {
+    $pageTitle = [string]$config.pageTitle
+}
+
 $rows = foreach ($game in $config.games) {
     try {
         Get-GameStatus -Game $game -RconBinaryPath $RconBinary
@@ -626,7 +631,7 @@ $rows = foreach ($game in $config.games) {
     }
 }
 
-$html = ConvertTo-StatusPageHtml -Rows $rows
+$html = ConvertTo-StatusPageHtml -Rows $rows -PageTitle $pageTitle
 $outputDir = Split-Path -Parent $OutputPath
 if (-not [string]::IsNullOrWhiteSpace($outputDir)) {
     New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
