@@ -35,8 +35,35 @@ Edit `config/games.json` and add as many games as needed:
 - `timeoutSeconds`: optional per-game command timeout
 - `commands.playerCount`, `commands.version` (up/down follows `processNamePattern` match, not RCON):
   - `command`: RCON command string
-  - `regex`: parser pattern for command output
-  - `group`: capture group index to extract
+  - `parseMode` (optional for `playerCount`): parsing strategy
+    - `regex`: use `regex` + `group` (default when omitted)
+    - `csv`: count non-empty player rows after CSV header
+  - `regex`: parser pattern for command output (used by `parseMode: "regex"`)
+  - `group`: capture group index to extract (used by `parseMode: "regex"`)
+
+### `playerCount` parsing examples
+
+Regex mode:
+
+```json
+"playerCount": {
+  "command": "list",
+  "parseMode": "regex",
+  "regex": "There\\s+are\\s+(\\d+)\\s+of\\s+\\d+\\s+players\\s+online",
+  "group": 1
+}
+```
+
+CSV mode (PalWorld-style output):
+
+```json
+"playerCount": {
+  "command": "showplayers",
+  "parseMode": "csv"
+}
+```
+
+For CSV mode, output is expected to have header `name,playeruid,steamid` followed by one row per player.
 
 ## Generate once
 
