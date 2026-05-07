@@ -102,6 +102,34 @@ function Parse-CommandResult {
     return $match.Groups[$Group].Value
 }
 
+function Parse-PlayerCountFromCsv {
+    param(
+        [AllowNull()][string]$Output
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Output)) {
+        return $null
+    }
+
+    $lines = $Output -split "\r?\n" |
+        ForEach-Object { $_.Trim() } |
+        Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+
+    if ($lines.Count -eq 0) {
+        return $null
+    }
+
+    if ($lines[0].ToLowerInvariant() -ne "name,playeruid,steamid") {
+        return $null
+    }
+
+    if ($lines.Count -eq 1) {
+        return "0"
+    }
+
+    return [string](($lines | Select-Object -Skip 1 | Measure-Object).Count)
+}
+
 function Format-Uptime {
     param(
         [Parameter(Mandatory = $true)][timespan]$Elapsed
@@ -186,11 +214,38 @@ function Get-GameStatus {
             continue
         }
 
-        $group = 0
-        if ($cmdSpec.group -ne $null) {
-            $group = [int]$cmdSpec.group
+        $parsed = $null
+        if ($key -eq "playerCount") {
+            # parseMode defaults to regex for backward compatibility.
+            $parseMode = "regex"
+            if ($cmdSpec.parseMode -ne $null -and -not [string]::IsNullOrWhiteSpace([string]$cmdSpec.parseMode)) {
+                $parseMode = ([string]$cmdSpec.parseMode).Trim().ToLowerInvariant()
+            }
+
+            switch ($parseMode) {
+                "regex" {
+                    $group = 0
+                    if ($cmdSpec.group -ne $null) {
+                        $group = [int]$cmdSpec.group
+                    }
+                    $parsed = Parse-CommandResult -Output $invocation.Output -Regex $cmdSpec.regex -Group $group
+                }
+                "csv" {
+                    $parsed = Parse-PlayerCountFromCsv -Output $invocation.Output
+                }
+                default {
+                    $errors.Add("playerCount parse failed: unsupported parseMode '$parseMode'")
+                }
+            }
         }
-        $parsed = Parse-CommandResult -Output $invocation.Output -Regex $cmdSpec.regex -Group $group
+        else {
+            $group = 0
+            if ($cmdSpec.group -ne $null) {
+                $group = [int]$cmdSpec.group
+            }
+            $parsed = Parse-CommandResult -Output $invocation.Output -Regex $cmdSpec.regex -Group $group
+        }
+
         switch ($key) {
             "playerCount" { $playerCountResult = $parsed }
             "version" { $versionResult = $parsed }

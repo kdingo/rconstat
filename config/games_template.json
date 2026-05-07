@@ -12,6 +12,7 @@
       "commands": {
         "playerCount": {
           "command": "status",
+          "parseMode": "regex",
           "regex": "players\\s*:\\s*(\\d+)",
           "group": 1
         },
@@ -32,9 +33,8 @@
       "timeoutSeconds": 5,
       "commands": {
         "playerCount": {
-          "command": "list",
-          "regex": "There\\s+are\\s+(\\d+)\\s+of\\s+\\d+\\s+players\\s+online",
-          "group": 1
+          "command": "showplayers",
+          "parseMode": "csv"
         },
         "version": {
           "command": "version",
