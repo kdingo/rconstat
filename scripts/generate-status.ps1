@@ -115,15 +115,15 @@ function Parse-PlayerCountFromCsv {
         ForEach-Object { $_.Trim() } |
         Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
 
-    if ($lines.Count -eq 0) {
+    if (@($lines).Count -eq 0) {
         return $null
     }
 
-    if ($lines[0].ToLowerInvariant() -ne "name,playeruid,steamid") {
+    if (@($lines)[0].ToLowerInvariant() -ne "name,playeruid,steamid") {
         return $null
     }
 
-    if ($lines.Count -eq 1) {
+    if (@($lines).Count -eq 1) {
         return "0"
     }
 
